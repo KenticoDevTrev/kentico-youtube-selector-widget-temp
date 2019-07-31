@@ -1,0 +1,85 @@
+﻿@model KenticoCommunity.YouTubeSelectorWidget.YouTubeSelectorSearchBoxModel
+
+@using (Html.Kentico().BeginInlineEditor("youtube-selector-search-box-editor", Model.PropertyName))
+{
+    <div id="vueapp">
+        Search: <input type="text" v-model="searchQuery" />
+        <ul v-if="images.length > 0">
+            <li v-for="image in images">
+                <img :src="image.url" :alt="image.videoId" v-on:click="selectedImage = image" />
+            </li>
+        </ul>
+    </div>
+
+    <script type="text/javascript">
+        if (!window.youtubeSelectorSearchBoxApp) {
+
+            window.kentico.pageBuilder.registerInlineEditor("youtube-selector-search-box-editor", {
+                init: function (options) {
+                  window.youtubeSelectorSearchEditor = options.editor;
+                }
+            });
+
+        }
+
+        window.youtubeSelectorSearchBoxApp = new Vue({
+            el: '#vueapp',
+            data: {
+              searchQuery: null,
+              searchTimeout: null,
+              images: [],
+              selectedImage: null
+            },
+            methods: {
+              executeSearch: function (val) {
+                console.log('starting...');
+                  fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&key=@Model.ApiKey&type=video&q=' + val)
+                        .then(response => response.json())
+                    .then(response => {
+                      let data = response.items;
+                      console.log(data);
+                      this.$data.images = data.map(function (item) {
+                        var videoSettings = { "videoId": item.id.videoId, "url": item.snippet.thumbnails.default.url };
+                        console.log(videoSettings);
+                        return videoSettings;
+                      })
+                    })
+                        .catch(function (error) {
+                            console.log(error);
+                    });
+
+                  // JSON Structure - items > id > videoId
+                }
+            },
+            watch: {
+                selectedImage: function (val) {
+                  console.log(val);
+                  if (!val) {
+                        return;
+                    }
+
+                    let event = new CustomEvent("updateProperty", {
+                        detail: {
+                            value: val.videoId,
+                            name: "@Model.PropertyName"
+                        }
+                    });
+                    window.youtubeSelectorSearchEditor.dispatchEvent(event);
+
+                    this.selectedImage = null;
+                    this.images = [];
+                },
+                searchQuery: function (val) {
+                    if (this.searchTimeout) {
+                        clearTimeout(this.searchTimeout);
+                    }
+                    this.searchTimeout = setTimeout(() => {
+                        this.executeSearch(val);
+                    }, 500);
+                }
+            }
+        });
+
+
+    </script>
+}

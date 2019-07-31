@@ -1,0 +1,37 @@
+﻿
+@model KenticoCommunity.YouTubeSelectorWidget.YouTubeSelectorWidgetViewModel
+
+@if (Context.Kentico().PageBuilder().EditMode)
+{
+  <div class="youtube-selector-wrapper">
+    @{
+      Html.RenderPartial("Widgets/_YouTubeSelectorSearchBox", new KenticoCommunity.YouTubeSelectorWidget.YouTubeSelectorSearchBoxModel
+      {
+        PropertyName = nameof(Model.VideoId),
+        ApiKey = Model.ApiKey
+      });
+    }
+  </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.VideoId))
+{
+  var YouTubeUrl = "https://www.youtube.com/embed/" + Model.VideoId + "?";
+  YouTubeUrl += (Model.AutoPlay.HasValue ? "autoplay=" + (Model.AutoPlay.Value ? "1" : "0") + "&" : "");
+  YouTubeUrl += (Model.AllowFullScreen.HasValue ? "fs=" + (Model.AllowFullScreen.Value ? "1" : "0") + "&" : "");
+  YouTubeUrl += (Model.ShowAnnotations.HasValue ? "iv_load_policy=" + (Model.ShowAnnotations.Value ? "1" : "0") + "&" : "");
+  YouTubeUrl += (Model.ShowTitleAndUploader.HasValue ? "showinfo=" + (Model.ShowTitleAndUploader.Value ? "1" : "0") + "&" : "");
+  YouTubeUrl += (Model.ShowRelatedVideos.HasValue ? "rel=" + (Model.ShowRelatedVideos.Value ? "1" : "0") + "&" : "");
+  YouTubeUrl += (Model.ShowCaptions.HasValue ? "cc_load_policy=" + (Model.ShowCaptions.Value ? "1" : "0") + "&" : "");
+  YouTubeUrl += (Model.StartTime.HasValue ? "start=" + Model.StartTime + "&" : "");
+  YouTubeUrl += (Model.EndTime.HasValue ? "end=" + Model.EndTime + "&" : "");
+  YouTubeUrl += (!string.IsNullOrWhiteSpace(Model.VideoQuality) ? "vq=" + Model.VideoQuality + "&" : "");
+  YouTubeUrl += Model.AdditionalParameters.Trim('&').Trim('?');
+  YouTubeUrl = YouTubeUrl.Trim('&').Trim('?');
+  var WidthAttr = (Model.Width.HasValue ? "width=\"" + Model.Width.Value + "\"" : "");
+  var HeightAttr = (Model.Height.HasValue ? "height=\"" + Model.Height.Value + "\"" : "");
+
+  <iframe frameborder="0" scrolling="no" marginheight="0" marginwidth="0" @Html.Raw(WidthAttr) @Html.Raw(HeightAttr) type="text/html" src="@YouTubeUrl" />
+}
+
+
